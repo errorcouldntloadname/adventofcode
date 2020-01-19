@@ -1,0 +1,110 @@
+from intcode import Intcode
+import os
+
+class Robot(Intcode):
+	
+	def __init__(self,intcode,inputstring):
+		super().__init__(intcode)
+		self.fieldstring = ""
+		self.crossing = set()
+		self.string = inputstring
+		self.inputcount = 0
+	#end of __init__
+
+	def handleIn(self):
+		
+		#manual version
+		"""		
+		user = input()
+		if user == "":
+			return 10
+		else:
+			return ord(user)
+		"""
+		#reading directions.dat
+		temp = self.string[self.inputcount]
+		self.inputcount += 1
+		temp2 = 0
+		for i in temp:
+			temp2 = 100 * temp2 + ord(i)
+		return temp2
+	#end of handleIn
+
+
+	def handleOut(self,output):
+		if output <= 256:
+			self.fieldstring += chr(output)
+			if not(output in [35,46]):
+				os.system("clear")
+				print(self.fieldstring)
+		else:
+			print(output)		
+	#end of handleOut
+
+
+	def convertfield(self):
+		field = {}		
+		x = 0
+		y = 0		
+		for i in self.fieldstring:
+			if ord(i) == 10:
+				x = 0
+				y += 1
+				continue
+			field[(x,y)] = i
+			x += 1
+		return field
+	#end of convertfield
+
+
+	#outputs the (x,y) of adjecent tiles
+	def adjecent(self,position):
+		output = []
+		output.append((position[0]+1,position[1]))
+		output.append((position[0]-1,position[1]))
+		output.append((position[0],position[1]+1))
+		output.append((position[0],position[1]-1))
+		return output
+	#end of adjecent
+
+
+	#finds each crossing in field
+	def findcrossing(self):
+		field = self.convertfield()
+		for i in field:
+			if field[i] != "#":
+				continue
+			adjecent = self.adjecent(i)
+			iscrossing = True
+			for j in adjecent:
+				if j in field:
+					if field[j] != "#":
+						iscrossing = False
+						break
+
+			if iscrossing:
+				self.crossing.add(i)
+	#end of findcrossing 
+	
+
+
+	def calibrate(self):
+		self.findcrossing()
+		calibration = 0
+		for i in self.crossing:
+			calibration += (i[0] * i[1])
+		return calibration
+	#end of calibrate
+
+
+#--------------------------------------------------------
+#end of Robot
+#--------------------------------------------------------
+
+data = open("ascii.dat","r")
+intcode = data.readline().rstrip()
+temp = ""
+for i in range(5):
+	temp += data.readline()
+robot = Robot(intcode,temp)
+robot.run()

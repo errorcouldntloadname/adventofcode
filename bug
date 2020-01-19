@@ -1,0 +1,96 @@
+#returns set of adjecent coordinate tuples
+def adjecent(current):
+	output = set()
+	temp = {}
+	temp["up"]    = (current[0],current[1]-1)
+	temp["down"]  = (current[0],current[1]+1)
+	temp["right"] = (current[0]+1,current[1])
+	temp["left"]  = (current[0]-1,current[1])
+
+	for i in temp:
+		if temp[i] in grid:
+			output.add(temp[i])
+	return output
+#end of adjecent
+
+
+#counts adjecent bugs
+def adjecentbugs(position):
+	close = adjecent(position)
+	bugcount = 0
+	for i in close:
+		if grid[i] == "#":
+			bugcount += 1
+	return bugcount
+#end of adjecentbugs
+
+
+#checks if bug dies
+def life(current,new):
+	#current tile is a bug
+	if grid[current] == "#":
+		#bug dies if exactly 1 bug adjecent
+		if adjecentbugs(current) != 1:
+			new[current] = "."
+	#current tile is empty	
+	else:	
+		#new bug if 1 or 2 bugs close
+		if adjecentbugs(current) in [1,2]:
+			new[current] = "#"
+#end of life
+
+
+#runs through entire field once
+def singlerun():
+	new = {}
+	for position in grid:
+		life(position,new)
+
+	for position in new:
+		grid[position] = new[position]
+#end of singlerun
+
+
+#print the field
+def printgrid():
+	for y in range(5):
+		temp = ""
+		for x in range(5):
+			temp += grid[(x,y)]
+		print(temp)
+#end of printgrid
+
+
+#returns biodiversity value of the current grid
+def diversity():
+	multiplier = 1
+	biodiversity = 0
+	for y in range(5):
+		for x in range(5):
+			if grid[(x,y)] == "#":
+				biodiversity += multiplier
+			multiplier = multiplier * 2
+	return biodiversity
+#end of diversity
+
+data = open("bug.dat","r")
+grid = {}
+
+y = 0
+for line in data:
+	x = 0
+	for c in line.rstrip():
+		grid[(x,y)] = c
+		x += 1
+	y += 1
+
+passed = set()
+while True:
+	bio = diversity()
+	print(bio) 
+	if bio in passed:
+		break
+	else:
+		passed.add(bio)	
+	singlerun()
+printgrid()

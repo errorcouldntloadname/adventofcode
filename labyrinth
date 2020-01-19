@@ -1,0 +1,98 @@
+#########################################################
+#--------------------------------------------------------
+#read maze as a graph
+#--------------------------------------------------------
+#########################################################
+import string
+
+import copy
+#Read maze as dictionary
+data = open("labyrinth.dat","r")
+field =  {}
+y = 0
+for line in data:
+	x = 0
+	y += 1
+	for i in line.rstrip():
+		field[(x,y)] = i		
+		x += 1
+
+
+#------------------------------------
+#Turn into graph
+#------------------------------------
+#returns all adjecent paths/keys/doors (evrything but walls essentially)
+def findadjecent(coordinate,field):
+	temp = [0,0,0,0]
+	output = []
+	temp[0] = (coordinate[0]+1,coordinate[1])
+	temp[1] = (coordinate[0]-1,coordinate[1])
+	temp[2] = (coordinate[0],coordinate[1]+1)
+	temp[3] = (coordinate[0],coordinate[1]-1)
+	for i in temp:
+		if i in field:
+			if field[i] != "#":
+				output.append(i)
+	return output
+#end of findadjecent
+
+	
+#finds all connected nodes for any given node in the given field
+def findnext(node,statfield):
+	current = set()		#current outer edges
+	next = set()		#outer edges of next step
+	field = copy.deepcopy(statfield)
+	field[node] = "#"
+	distance = 0
+	output = set()
+
+	#find the coordinates of the node in question
+	for i in field:
+		if field[i] == node:
+			current.add(i)
+			break
+
+	#check evry tile next to the current outer edge
+	while len(current)>0:
+		distance += 1
+		for i in current:
+			adjecent = findadjecent(i,field)
+			for j in adjecent:
+				if field[j] == ".":
+					next.add(j)
+				else:
+					output.add((field[j],distance))
+				field[j] = "#"	#blocks this tile so the same tile is only found once
+		#set current for the next step
+		current = next
+		next = set()
+	return output
+#end of findnext
+
+
+#find evry node in the field
+Nodes = set()
+for i in field:
+	if not(field[i] in [".","#"]):
+		Nodes.add(field[i])
+
+
+#for evry node get its connected nodes
+graph = {}		#key = node, value = set of connected nodes as (node,distance)
+for node in Nodes:	
+	graph[node] = findnext(node,field)
+
+
+
+
+print(graph)
+
+#########################################################
+#--------------------------------------------------------
+#End of reading input
+#--------------------------------------------------------
+#make a dictionary of paths : next node
+#if path in dictionary and no next node left the path is fully explored, retreat one node and remove said node
+#this finds one path to the end then works its way back to origin and repeats with next node from origin
+#--------------------------------------------------------
+#########################################################

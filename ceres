@@ -1,0 +1,46 @@
+import math
+
+def distance(a,b):
+	return math.sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2)
+
+def isbetween(a,b,c):
+	if (a != c) and (b != c):
+		return round(distance(a,b)*1000000) == round((distance(a,c) + distance(b,c))*1000000)
+	else:
+		return False
+
+data = open("ceres.dat","r")
+asteroid = set()
+
+y = 0
+for line in data:
+	x = 0
+	for i in line.rstrip():
+		if i == "#":
+			asteroid.add((x,y))
+		x += 1
+	y += 1
+
+
+highest = 0
+x = 0
+for station in asteroid:
+	sight = 0
+	for current in asteroid:
+		if current != station:
+			blocked = False
+			for blocking in asteroid:
+				if isbetween(station,current,blocking):
+#					print(str(blocking) + "is blocking" + str(station) + "to" + str(current))
+					blocked = True
+					break
+			if not(blocked):
+				sight += 1
+	x += 1
+	print(x)
+	if highest < sight:
+		highest = sight
+		beststation = station
+
+print(highest)
+print(beststation)

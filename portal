@@ -1,0 +1,167 @@
+import string as ascii
+import copy
+import time
+import os
+#day 20 
+
+#create graph with node for every dot
+#breadth first search for portals
+#djikstra shortest path 
+
+#------------------------------------------------
+#read input as dictionary
+#------------------------------------------------
+#returns adjecent paths
+def findadjecent(coordinate,field):
+	temp = [0,0,0,0]
+	output = []
+	temp[0] = (coordinate[0]+1,coordinate[1])
+	temp[1] = (coordinate[0]-1,coordinate[1])
+	temp[2] = (coordinate[0],coordinate[1]+1)
+	temp[3] = (coordinate[0],coordinate[1]-1)
+	for i in temp:
+		if i in field:
+			if not(field[i] in [" ","#"]) and not(field[i] in "0123456789"):
+				output.append(i)
+	return output
+
+#portals are written as 2 characters, identifies if this position is hte portal, if it is output portal
+def readportal(coordinate,field):
+	adjecent = findadjecent(coordinate,field)
+	adjchar = []
+	for i in adjecent:
+		adjchar.append(field[i])
+	if "." in adjchar:
+		#check if letter is right/down
+		if field[adjecent[0]] != ".":
+			return field[coordinate] + field[adjecent[0]]
+		else:
+			return field[adjecent[1]] + field[coordinate]
+	else:
+		return field[coordinate]
+
+
+#prints the current field (replaces portals with star
+def printfield(field):
+	for y in range(maxy):
+		temp = ""
+		for x in range(maxx):
+			if len(field[(x,y)]) == 2:
+				temp += "✺"
+			else:
+				temp += field[(x,y)]
+		print(temp)
+#end of printfield
+
+
+#reads data into array
+field = {}
+Portal = set()
+data = open("portal.dat","r")
+y = 0
+for line in data:
+	x = 0
+	string = line[:-1]
+	for i in string:
+		field[(x,y)] = i
+		x += 1
+	y += 1
+maxx = x
+maxy = y
+for y in range(maxy):
+	for x in range(maxx):
+		if not(field[(x,y)] in [".","#"," "]):
+			field[(x,y)] = readportal((x,y),field)
+
+
+for y in range(maxy):
+	for x in range(maxx):
+			if (len(field[(x,y)]) == 1):
+				if (field[(x,y)] in ascii.ascii_uppercase):
+					field[(x,y)] = " "
+			else:
+				Portal.add(field[(x,y)])
+
+#key = node, values = (connectednode,length) (edges)
+
+#-------------------------------------------------
+#convert to graph
+#-------------------------------------------------
+def findnext(node,statfield):
+	current = set()		#current "."
+	next = set()		#next "." (adjecent "." to current and not yet traveld through)
+	output = []
+	distance = 1
+	connected = set()	#fills with all connected nodes so no doubles exist
+	field = copy.deepcopy(statfield)	#messing up the field in the function, so deepcopy it
+	#portals of current node are starting point
+	for i in field:
+		if field[i] == node:
+			current.add(i)
+			field[i] = "0"
+
+	while len(current) > 0:
+		#check fields next to current
+		for i in current:
+			adjecent = findadjecent(i,field)	#returns list of adjecent portals and paths
+			for j in adjecent:
+				if field[j] == ".":
+					field[j] = str(distance)[-1:]	#fills paths with the distance from node (last digit)
+					next.add(j)				#path is now outer for the next step
+				else:				#adjecent is a portal
+					if not(field[j] in connected):
+						output.append((field[j],distance-1))
+						connected.add(field[j])
+		current = next
+		next = set()
+		distance += 1
+		#time.sleep(0.075)
+		#os.system("clear")
+		#printfield(field)
+	return output
+#end of findnext
+
+#runs over evry . if there is more than 2 connected paths, its a node
+graph = {}	#the graph
+for node in Portal:
+	graph[node] = findnext(node,field)
+
+print(graph)
+#Dijkstra
+#no idea how it works ;/ have to google
+finaleNodes = set()
+Distance = {}
+currentnode = ""
+#initialize Distances
+for node in Portal:
+	Distance[node] = -1
+Distance["AA"] = 0
+
+#-1 implements infinity
+def smaller(first,second):
+	if first == -1:
+		return False
+	if second == -1:
+		return True
+	return (first < second)
+
+def nextnode():
+	lowDistance = -1
+	lowNode = "AA"
+	for node in Distance:
+		if node in finaleNodes:
+			continue
+		if smaller(Distance[node],lowDistance):
+			lowDistance = Distance[node]
+			lowNode = node
+	return lowNode
+
+while currentnode != "ZZ":
+	currentnode = nextnode()
+	#for each connected node
+	for node in graph[currentnode]:
+		#if origin->currentnode + currentnode -> node < origin -> node
+		if smaller(Distance[currentnode]+node[1],Distance[node[0]]):
+			Distance[node[0]] = Distance[currentnode]+node[1]
+	finaleNodes.add(currentnode)
+print(Distance["ZZ"]-1)	#task starts 1 step next to AA
