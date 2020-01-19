@@ -85,14 +85,25 @@ for node in Nodes:
 
 
 
-print(graph)
+print(len(graph))
 
 #########################################################
 #--------------------------------------------------------
 #End of reading input
 #--------------------------------------------------------
-#make a dictionary of paths : next node
-#if path in dictionary and no next node left the path is fully explored, retreat one node and remove said node
-#this finds one path to the end then works its way back to origin and repeats with next node from origin
+#key / door logic
 #--------------------------------------------------------
 #########################################################
+
+collected = set()	#collected keys
+state = {} 			#current state of the labyrinth (only open doors in the graph)
+
+#adds the corresponding door to state
+def openDoor(key):
+	adjecent = graph[key.upper()]
+	state[key.upper()] = adjecent	#adds door to the graph
+	for i in adjecent:
+		if i[0] in state:
+			state[i[0]].add((key.upper(),i[1]))		#adds edges to the added door
+
+print(openDoor("@"))
