@@ -1,89 +1,99 @@
 import string
 import copy
+import json
+import os
 
-#########################################################
-#--------------------------------------------------------
-#read maze as a graph
-#--------------------------------------------------------
-#########################################################
+if os.path.isfile("labyrinth.graph"):
+	#graph exported to labgraph.dat json 
+	#########################################################
+	#--------------------------------------------------------
+	#read maze as a graph
+	#--------------------------------------------------------
+	#########################################################
 
-#Read maze as dictionary
-data = open("labyrinth.dat","r")
-field =  {}
-y = 0
-for line in data:
-	x = 0
-	y += 1
-	for i in line.rstrip():
-		field[(x,y)] = i		
-		x += 1
+	#Read maze as dictionary
+	data = open("labyrinth.dat","r")
+	field =  {}
+	y = 0
+	for line in data:
+		x = 0
+		y += 1
+		for i in line.rstrip():
+			field[(x,y)] = i		
+			x += 1
 
 
-#------------------------------------
-#Turn into graph
-#------------------------------------
-#returns all adjecent paths/keys/doors (evrything but walls essentially)
-def findadjecent(coordinate,field):
-	temp = [0,0,0,0]
-	output = []
-	temp[0] = (coordinate[0]+1,coordinate[1])
-	temp[1] = (coordinate[0]-1,coordinate[1])
-	temp[2] = (coordinate[0],coordinate[1]+1)
-	temp[3] = (coordinate[0],coordinate[1]-1)
-	for i in temp:
-		if i in field:
-			if field[i] != "#":
-				output.append(i)
-	return output
-#end of findadjecent
+	#------------------------------------
+	#Turn into graph
+	#------------------------------------
+	#returns all adjecent paths/keys/doors (evrything but walls essentially)
+	def findadjecent(coordinate,field):
+		temp = [0,0,0,0]
+		output = []
+		temp[0] = (coordinate[0]+1,coordinate[1])
+		temp[1] = (coordinate[0]-1,coordinate[1])
+		temp[2] = (coordinate[0],coordinate[1]+1)
+		temp[3] = (coordinate[0],coordinate[1]-1)
+		for i in temp:
+			if i in field:
+				if field[i] != "#":
+					output.append(i)
+		return output
+	#end of findadjecent
 
-	
-#finds all connected nodes for any given node in the given field
-def findnext(node,statfield):
-	current = set()		#current outer edges
-	next = set()		#outer edges of next step
-	field = copy.deepcopy(statfield)
-	field[node] = "#"
-	distance = 0
-	output = set()
+		
+	#finds all connected nodes for any given node in the given field
+	def findnext(node,statfield):
+		current = set()		#current outer edges
+		next = set()		#outer edges of next step
+		field = copy.deepcopy(statfield)
+		field[node] = "#"
+		distance = 0
+		output = []
 
-	#find the coordinates of the node in question
+		#find the coordinates of the node in question
+		for i in field:
+			if field[i] == node:
+				current.add(i)
+				break
+
+		#check evry tile next to the current outer edge
+		while len(current)>0:
+			distance += 1
+			for i in current:
+				adjecent = findadjecent(i,field)
+				for j in adjecent:
+					if field[j] == ".":
+						next.add(j)
+					else:
+						output.append((field[j],distance))
+					field[j] = "#"	#blocks this tile so the same tile is only found once
+			#set current for the next step
+			current = next
+			next = set()
+		return output
+	#end of findnext
+
+
+	#find evry node in the field
+	Nodes = set()
 	for i in field:
-		if field[i] == node:
-			current.add(i)
-			break
-
-	#check evry tile next to the current outer edge
-	while len(current)>0:
-		distance += 1
-		for i in current:
-			adjecent = findadjecent(i,field)
-			for j in adjecent:
-				if field[j] == ".":
-					next.add(j)
-				else:
-					output.add((field[j],distance))
-				field[j] = "#"	#blocks this tile so the same tile is only found once
-		#set current for the next step
-		current = next
-		next = set()
-	return output
-#end of findnext
+		if not(field[i] in [".","#"]):
+			Nodes.add(field[i])
 
 
-#find evry node in the field
-Nodes = set()
-for i in field:
-	if not(field[i] in [".","#"]):
-		Nodes.add(field[i])
+	#for evry node get its connected nodes
+	graph = {}		#key = node, value = set of connected nodes as (node,distance)
+	for node in Nodes:	
+		graph[node] = findnext(node,field)
+
+	data = open("labyrinth.graph","w")
+	data.write(json.dumps(graph,ensure_ascii=False))
+#end of reading maze as graph
 
 
-#for evry node get its connected nodes
-graph = {}		#key = node, value = set of connected nodes as (node,distance)
-for node in Nodes:	
-	graph[node] = findnext(node,field)
-
-
+data = open("labgraph.dat","r")
+graph = json.loads(data.readline().rstrip())
 
 #########################################################
 #--------------------------------------------------------
@@ -121,5 +131,48 @@ def reachable(state):
 		found = set()
 	return output
 #end of reachable
-print(reachable(("@","")))	
+
+
+#dijsktra
+def shortestpath(start,end,keys):
+	finaleNodes = set()
+	Distance = {}
+	currentnode = ""
+	#initialize Distances
+	for node in ("@" + keys + keys.upper() + end):
+		Distance[node] = -1
+	Distance[start] = 0
+
+	#-1 implements infinity
+	def smaller(first,second):
+		if first == -1:
+			return False
+		if second == -1:
+			return True
+		return (first < second)
+
+	def nextnode():
+		lowDistance = -1
+		lowNode = ""
+		for node in Distance:
+			if node in finaleNodes:
+				continue
+			if smaller(Distance[node],lowDistance):
+				lowDistance = Distance[node]
+				lowNode = node
+		return lowNode
+
+	while currentnode != end:
+		currentnode = nextnode()
+		#for each connected node
+		for node in graph[currentnode]:
+			if node[0] in Distance:
+				#if origin->currentnode + currentnode -> node < origin -> node
+				if smaller(Distance[currentnode]+node[1],Distance[node[0]]):
+					Distance[node[0]] = Distance[currentnode]+node[1]
+		finaleNodes.add(currentnode)
+	return Distance[end]
+print("hey")
+print(shortestpath("@","a",""))
+#end of shortestpath
 #---------------------------------------------------------------------------
