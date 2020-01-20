@@ -1,11 +1,12 @@
+import string
+import copy
+
 #########################################################
 #--------------------------------------------------------
 #read maze as a graph
 #--------------------------------------------------------
 #########################################################
-import string
 
-import copy
 #Read maze as dictionary
 data = open("labyrinth.dat","r")
 field =  {}
@@ -84,26 +85,41 @@ for node in Nodes:
 
 
 
-
-print(len(graph))
-
 #########################################################
 #--------------------------------------------------------
 #End of reading input
 #--------------------------------------------------------
-#key / door logic
+#calculate states consiting of (node,keys) and the shortest path each state recursivly
 #--------------------------------------------------------
 #########################################################
 
-collected = set()	#collected keys
-state = {} 			#current state of the labyrinth (only open doors in the graph)
+states = {}			#contains states and the pathlength	
+totalkeys = 0		#path ends when len(collected) = totalkeys
+for i in graph:
+	if i in string.ascii_lowercase:
+		totalkeys += 1
 
-#adds the corresponding door to state
-def openDoor(key):
-	adjecent = graph[key.upper()]
-	state[key.upper()] = adjecent	#adds door to the graph
-	for i in adjecent:
-		if i[0] in state:
-			state[i[0]].add((key.upper(),i[1]))		#adds edges to the added door
 
-print(openDoor("@"))
+#outputs the list of keys that dont require travel through either locked door or uncollected key
+def reachable(state):
+	allowed = "@" + state[1]
+	explored = set()
+	current = set(state[0])
+	found = set()
+	output = set()
+	while len(current) > 0:
+		for node in current:
+			for connected in graph[node]:
+				if (connected[0] in allowed.lower()):
+					if not(connected[0] in explored) and not(connected[0] in current):
+						found.add(connected[0])
+				else:
+					if connected[0] in string.ascii_lowercase:
+						output.add(connected[0])
+			explored.add(node)
+		current = found
+		found = set()
+	return output
+#end of reachable
+print(reachable(("@","")))	
+#---------------------------------------------------------------------------
