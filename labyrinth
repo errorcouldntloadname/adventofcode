@@ -55,6 +55,7 @@ if not(os.path.isfile("labyrinth.graph")):
 		for i in field:
 			if field[i] == node:
 				current.add(i)
+				field[i] = "#"
 				break
 
 		#check evry tile next to the current outer edge
@@ -106,7 +107,7 @@ graph = json.loads(data.readline().rstrip())
 
 #outputs the list of keys that dont require travel through either locked door or uncollected key
 def reachable(state):
-	allowed = "@" + state[1]
+	allowed = "@" + bittostring(state[1]) + bittostring(state[1]).upper()
 	explored = set()
 	current = set(state[0])
 	found = set()
@@ -114,7 +115,7 @@ def reachable(state):
 	while len(current) > 0:
 		for node in current:
 			for connected in graph[node]:
-				if (connected[0] in allowed.lower()):
+				if (connected[0] in allowed):
 					if not(connected[0] in explored) and not(connected[0] in current):
 						found.add(connected[0])
 				else:
@@ -182,7 +183,6 @@ def path(start,end,keys):
 		finaleNodes.add(currentnode)
 	return Distance[end]
 #end of path
-print(reachable(("b",string.ascii_lowercase)))
 #---------------------------------------------------------------------------
 #calculate score recursivly, take the min of every
 states = {}			#contains states and the pathlength	
@@ -192,13 +192,22 @@ for i in graph:
 		totalkeys += 1
  
 def score(node,keys):
-	#check if this score was calulated b4
+	#check if this score was calulated before
 	if (node,keys) in states:
 		return states[(node,keys)]
 	else:
-		possible = []
-		for prev in reachable:
-			possible.append(score((prev,(keys & ~(1<<(ord(prev)-97))))))
-		value = min(possible)
-		state[(node,keys)] = value
+		#calculate the current score
+		temp = []
+		for next in reachable((node,keys)):
+			temp.append(score(next,keys | 1<<(ord(next)-97)) + path(node,next,keys))
+		if len(temp) == 0:
+			#either dead end (ignore this path) or all keys found(start resolving recursive)
+			if len(bittostring(keys)) == totalkeys:
+				value = 0
+			else:
+				value = 10**10
+		else:
+			value = min(temp)
+		states[(node,keys)] = value
 		return value
+print(score("@",0))
