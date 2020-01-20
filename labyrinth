@@ -182,9 +182,9 @@ def path(start,end,keys):
 		finaleNodes.add(currentnode)
 	return Distance[end]
 #end of path
+print(reachable(("b",string.ascii_lowercase)))
 #---------------------------------------------------------------------------
 #calculate score recursivly, take the min of every
-"""
 states = {}			#contains states and the pathlength	
 totalkeys = 0		#path ends when len(collected) = totalkeys
 for i in graph:
@@ -197,6 +197,8 @@ def score(node,keys):
 		return states[(node,keys)]
 	else:
 		possible = []
-		for node in reachable:
-			print("hey")
-"""
+		for prev in reachable:
+			possible.append(score((prev,(keys & ~(1<<(ord(prev)-97))))))
+		value = min(possible)
+		state[(node,keys)] = value
+		return value
