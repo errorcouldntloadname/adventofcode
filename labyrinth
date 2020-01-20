@@ -3,7 +3,7 @@ import copy
 import json
 import os
 
-if os.path.isfile("labyrinth.graph"):
+if not(os.path.isfile("labyrinth.graph")):
 	#graph exported to labgraph.dat json 
 	#########################################################
 	#--------------------------------------------------------
@@ -92,22 +92,16 @@ if os.path.isfile("labyrinth.graph"):
 #end of reading maze as graph
 
 
-data = open("labgraph.dat","r")
+data = open("labyrinth.graph","r")
 graph = json.loads(data.readline().rstrip())
 
 #########################################################
 #--------------------------------------------------------
 #End of reading input
 #--------------------------------------------------------
-#calculate states consiting of (node,keys) and the shortest path each state recursivly
+#reachable and dijsktra for the graph
 #--------------------------------------------------------
 #########################################################
-
-states = {}			#contains states and the pathlength	
-totalkeys = 0		#path ends when len(collected) = totalkeys
-for i in graph:
-	if i in string.ascii_lowercase:
-		totalkeys += 1
 
 
 #outputs the list of keys that dont require travel through either locked door or uncollected key
@@ -133,13 +127,28 @@ def reachable(state):
 #end of reachable
 
 
+#returns string for key bitmap
+def bittostring(bitmap):
+	output = ""
+	for i in range(26):
+		if bitmap == 0:
+			break
+		elif bitmap % 2 == 1:
+			output += string.ascii_lowercase[i:i+1]
+			bitmap += -1
+		bitmap = bitmap / 2
+	return output
+#end of bittostring
+
+			
 #dijsktra
-def shortestpath(start,end,keys):
+def path(start,end,keys):
 	finaleNodes = set()
+	keystring = bittostring(keys)
 	Distance = {}
 	currentnode = ""
 	#initialize Distances
-	for node in ("@" + keys + keys.upper() + end):
+	for node in ("@" + keystring + keystring.upper() + end):
 		Distance[node] = -1
 	Distance[start] = 0
 
@@ -172,7 +181,22 @@ def shortestpath(start,end,keys):
 					Distance[node[0]] = Distance[currentnode]+node[1]
 		finaleNodes.add(currentnode)
 	return Distance[end]
-print("hey")
-print(shortestpath("@","a",""))
-#end of shortestpath
+#end of path
 #---------------------------------------------------------------------------
+#calculate score recursivly, take the min of every
+"""
+states = {}			#contains states and the pathlength	
+totalkeys = 0		#path ends when len(collected) = totalkeys
+for i in graph:
+	if i in string.ascii_lowercase:
+		totalkeys += 1
+ 
+def score(node,keys):
+	#check if this score was calulated b4
+	if (node,keys) in states:
+		return states[(node,keys)]
+	else:
+		possible = []
+		for node in reachable:
+			print("hey")
+"""
