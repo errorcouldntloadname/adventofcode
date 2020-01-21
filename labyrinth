@@ -193,11 +193,16 @@ def path(start,end,keys):
 #calculate score recursivly, take the min of every
 states = {}			#contains states and the pathlength	
 totalkeys = 0		#path ends when len(collected) = totalkeys
+call = set()
 for i in graph:
 	if i in string.ascii_lowercase:
 		totalkeys += 1
+
  
 def score(position,keys):
+	#print how often score is called
+	call.add(len(call))
+	print("call" , len(call))
 	#check if this score was calulated before
 	if (position,keys) in states:
 		return states[(position,keys)]
