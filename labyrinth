@@ -184,6 +184,8 @@ def path(start,end,keys):
 	return Distance[end]
 #end of path
 #---------------------------------------------------------------------------
+#calculate steps to having max. all the keys from any given state
+#---------------------------------------------------------------------------
 #calculate score recursivly, take the min of every
 states = {}			#contains states and the pathlength	
 totalkeys = 0		#path ends when len(collected) = totalkeys
@@ -211,3 +213,4 @@ def score(node,keys):
 		states[(node,keys)] = value
 		return value
 print(score("@",0))
+"""
