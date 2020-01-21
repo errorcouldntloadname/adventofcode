@@ -4,6 +4,7 @@ import json
 import os
 
 if not(os.path.isfile("labyrinth.graph")):
+	#top left starting point is 1 then clockwise (replace the 4 diffrent @)
 	#graph exported to labgraph.dat json 
 	#########################################################
 	#--------------------------------------------------------
@@ -107,23 +108,25 @@ graph = json.loads(data.readline().rstrip())
 
 #outputs the list of keys that dont require travel through either locked door or uncollected key
 def reachable(state):
-	allowed = "@" + bittostring(state[1]) + bittostring(state[1]).upper()
-	explored = set()
-	current = set(state[0])
-	found = set()
+	allowed = "1234" + bittostring(state[1]) + bittostring(state[1]).upper()
 	output = set()
-	while len(current) > 0:
-		for node in current:
-			for connected in graph[node]:
-				if (connected[0] in allowed):
-					if not(connected[0] in explored) and not(connected[0] in current):
-						found.add(connected[0])
-				else:
-					if connected[0] in string.ascii_lowercase:
-						output.add(connected[0])
-			explored.add(node)
-		current = found
+	for i in range(4):		
+		explored = set()
+		current = set(state[0][i])
 		found = set()
+		while len(current) > 0:
+			for node in current:
+				for connected in graph[node]:
+					if (connected[0] in allowed):
+						if not(connected[0] in explored) and not(connected[0] in current):
+							found.add(connected[0])
+					else:
+						if connected[0] in string.ascii_lowercase:
+							newpos = state[0][:i] + connected[0] + state[0][i+1:]
+							output.add((newpos,i))
+				explored.add(node)
+			current = found
+			found = set()
 	return output
 #end of reachable
 
@@ -149,7 +152,7 @@ def path(start,end,keys):
 	Distance = {}
 	currentnode = ""
 	#initialize Distances
-	for node in ("@" + keystring + keystring.upper() + end):
+	for node in ("1234" + keystring + keystring.upper() + end):
 		Distance[node] = -1
 	Distance[start] = 0
 
@@ -185,6 +188,7 @@ def path(start,end,keys):
 #end of path
 #---------------------------------------------------------------------------
 #calculate steps to having max. all the keys from any given state
+#state contains of a string "1234" for the 4 diffrent robot positions (instead of just node)
 #---------------------------------------------------------------------------
 #calculate score recursivly, take the min of every
 states = {}			#contains states and the pathlength	
@@ -193,15 +197,17 @@ for i in graph:
 	if i in string.ascii_lowercase:
 		totalkeys += 1
  
-def score(node,keys):
+def score(position,keys):
 	#check if this score was calulated before
-	if (node,keys) in states:
-		return states[(node,keys)]
+	if (position,keys) in states:
+		return states[(position,keys)]
 	else:
 		#calculate the current score
 		temp = []
-		for next in reachable((node,keys)):
-			temp.append(score(next,keys | 1<<(ord(next)-97)) + path(node,next,keys))
+		for next in reachable((position,keys)):	#next[0] is the position, next[1] is wich position changed
+			newpos = next[0]
+			new = next[1]
+			temp.append(score(newpos,keys | 1<<(ord(newpos[new])-97)) + path(position[new],newpos[new],keys))
 		if len(temp) == 0:
 			#either dead end (ignore this path) or all keys found(start resolving recursive)
 			if len(bittostring(keys)) == totalkeys:
@@ -210,7 +216,8 @@ def score(node,keys):
 				value = 10**10
 		else:
 			value = min(temp)
-		states[(node,keys)] = value
+		states[(position,keys)] = value
 		return value
-print(score("@",0))
-"""
+
+#calculate the score for the starting state of the robots
+print(score("1234",0))
