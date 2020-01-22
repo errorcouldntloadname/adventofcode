@@ -1,3 +1,4 @@
+import copy
 #---------------------------------------------------------------------------------
 #read input data
 #wanted format: 3 lists for x coor, ycoor and zcoor of all moons
@@ -13,6 +14,22 @@ for line in data:
 	Coor[0].append(int(x[3:]))
 	Coor[1].append(int(y[3:]))
 	Coor[2].append(int(z[3:-1]))
-
-Velocity = [[0]*4,[0]*4,[0]*4]
+#all pairs of the 4 moons
+pairs = {(0,1),(0,2),(0,3),(1,2),(1,3),(2,3)}
+Vel = [[0]*4,[0]*4,[0]*4]
 repeats = [0]*3			#how many steps till this coordinate repeats
+
+starting = copy.deepcopy(Coor)
+#calculate each coordinates repeating steps seperately
+for i in range(3):
+	Coordinate = Coor[i]		
+	Velocity = Vel[i]
+	#apply gravity
+	for pair in pairs:
+		if Coordinate[pair[0]] > Coordinate[pair[1]]:
+			Velocity[pair[0]] += -1
+			Velocity[pair[1]] += 1
+		elif Coordinate[pair[0]] < Coordinate[pair[1]]:
+			Velocity[pair[0]] += 1
+			Velocity[pair[1]] += -1
+	#apply velocitiy
