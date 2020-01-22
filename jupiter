@@ -19,17 +19,32 @@ pairs = {(0,1),(0,2),(0,3),(1,2),(1,3),(2,3)}
 Vel = [[0]*4,[0]*4,[0]*4]
 repeats = [0]*3			#how many steps till this coordinate repeats
 
-starting = copy.deepcopy(Coor)
+
+startingCoor = copy.deepcopy(Coor)
+startingVel = copy.deepcopy(Vel)
 #calculate each coordinates repeating steps seperately
 for i in range(3):
 	Coordinate = Coor[i]		
 	Velocity = Vel[i]
-	#apply gravity
-	for pair in pairs:
-		if Coordinate[pair[0]] > Coordinate[pair[1]]:
-			Velocity[pair[0]] += -1
-			Velocity[pair[1]] += 1
-		elif Coordinate[pair[0]] < Coordinate[pair[1]]:
-			Velocity[pair[0]] += 1
-			Velocity[pair[1]] += -1
-	#apply velocitiy
+	steps = 0
+	repeated = False
+	while not(repeated):
+		steps += 1
+		#apply gravity
+		for pair in pairs:
+			if Coordinate[pair[0]] > Coordinate[pair[1]]:
+				Velocity[pair[0]] += -1
+				Velocity[pair[1]] += 1
+			elif Coordinate[pair[0]] < Coordinate[pair[1]]:
+				Velocity[pair[0]] += 1
+				Velocity[pair[1]] += -1
+		#apply velocitiy
+		for j in range(4):
+			Coordinate[j] += Velocity[j]
+		#--------------------------------------
+		#check if this matches the start position
+		if (Coordinate == startingCoor[i]) and (Velocity == startingVel[i]):
+			repeats[i] = steps
+			repeated = True	#stops this dimmension
+
+print(repeats)
