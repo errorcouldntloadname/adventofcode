@@ -201,7 +201,9 @@ def path(start,end,keys):
 #end of path
 #---------------------------------------------------------------------------
 #calculate steps to having max. all the keys from any given state
-#state contains of a string "1234" for the 4 diffrent robot positions (instead of just node)
+#state = (position,keys)    , states repeat alot, but never result in diffrent score thus score can be saved
+#position = 4long string containing the bot positions ( "1234" = all bots at entrances)
+#keys = bitmap of keys collected with LSB beeing key a
 #---------------------------------------------------------------------------
 #calculate score recursivly, take the min of every
 states = {}			#contains states and the pathlength	
