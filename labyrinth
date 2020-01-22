@@ -215,9 +215,6 @@ for i in graph:
 
  
 def score(position,keys):
-	#print how often score is called
-	call.add(len(call))
-	print("call" , len(call))
 	#check if this score was calulated before
 	if (position,keys) in states:
 		return states[(position,keys)]
