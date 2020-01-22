@@ -1,1 +1,18 @@
-#rewrite evrything
+#---------------------------------------------------------------------------------
+#read input data
+#wanted format: 3 lists for x coor, ycoor and zcoor of all moons
+#---------------------------------------------------------------------------------
+
+data = open("jupiter.dat","r")
+
+Coor = [[],[],[]]	
+
+#input : "<x=0, y=0, z=0>" (with 0 beeing any number)
+for line in data:
+	x,y,z = line.rstrip().split(",")
+	Coor[0].append(int(x[3:]))
+	Coor[1].append(int(y[3:]))
+	Coor[2].append(int(z[3:-1]))
+
+Velocity = [[0]*4,[0]*4,[0]*4]
+repeats = [0]*3			#how many steps till this coordinate repeats
