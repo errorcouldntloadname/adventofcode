@@ -15,12 +15,16 @@ if not(os.path.isfile("labyrinth.graph")):
 	#Read maze as dictionary
 	data = open("labyrinth.dat","r")
 	field =  {}
+	entrancecount = 1		#replaces @ with number (needed for part2)
 	y = 0
 	for line in data:
 		x = 0
 		y += 1
 		for i in line.rstrip():
-			field[(x,y)] = i		
+			field[(x,y)] = i	
+			if i == "@":
+				field[(x,y)] = str(entrancecount)
+				entrancecount += 1	
 			x += 1
 
 
@@ -93,10 +97,19 @@ if not(os.path.isfile("labyrinth.graph")):
 	data.write(json.dumps(graph,ensure_ascii=False))
 #end of reading maze as graph
 
+#---------------------------------------------------------
+#reads graph from json
+#----------------------------------------------------------
 
 data = open("labyrinth.graph","r")
 graph = json.loads(data.readline().rstrip())
 
+#check if its part 1 or 2 (only part 2 has "2" in the graph)
+#entrancecount is used so that reachable doesnt break on part 1
+if "2" in graph.keys():
+	entrancecount = 4
+else:
+	entrancecount = 1
 #########################################################
 #--------------------------------------------------------
 #End of reading input
@@ -110,7 +123,7 @@ graph = json.loads(data.readline().rstrip())
 def reachable(state):
 	allowed = "1234" + bittostring(state[1]) + bittostring(state[1]).upper()
 	output = set()
-	for i in range(4):		
+	for i in range(entrancecount):		#parts 2 : range(4) , part1 : range(1)		
 		explored = set()
 		current = set(state[0][i])
 		found = set()
