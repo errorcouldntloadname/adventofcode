@@ -50,7 +50,6 @@ for i in range(3):
 #----------------------------------------------------------------------------------
 #calculate first intersection of all 3 repeats
 #----------------------------------------------------------------------------------
-
 #returns the greatest common divisor
 def euklid(m,n):
 	if (n/m).is_integer():
@@ -61,6 +60,7 @@ def euklid(m,n):
 
 #first time all 3 dimmensions repeat at the same time is at the least common multiple of hte individual repeats
 #calculate lcm of x and y
+print(repeats)
 lcm12 = int((repeats[0] * repeats[1]) / (euklid(repeats[0],repeats[1])))
 #calculate lcm of x,y and z
 lcm = int((lcm12 * repeats[2]) / (euklid(lcm12,repeats[2])))
