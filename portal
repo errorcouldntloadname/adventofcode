@@ -88,12 +88,19 @@ for y in range(maxy):
 #returns the portal depending on wether its on the inner edge or outer
 def portalDirection(coor):
 	if (coor[0] == 1) or (coor[0] == maxx-2) or (coor[1] == 1) or (coor[1] == maxy - 2):
-		print("outer" , coor)
+		return field[coor]+"O"
 	else:
-		print("inner" , coor)
-	return field[coor]
+		return field[coor]+"I"
+
+#runs throug the field adding directions to portals
+dirPortals = set()
+for coor in field:
+	if len(field[coor]) == 2:
+		field[coor] = portalDirection(coor)
+		dirPortals.add(field[coor])
 
 
+#finds all adjecent nodes for the graph
 def findnext(node,statfield):
 	current = set()		#current "."
 	next = set()		#next "." (adjecent "." to current and not yet traveld through)
@@ -117,7 +124,7 @@ def findnext(node,statfield):
 					next.add(j)				#path is now outer for the next step
 				else:				#adjecent is a portal
 					if not(field[j] in connected):
-						output.append((portalDirection(j),distance-1))
+						output.append((field[j],distance-1))
 						connected.add(field[j])
 		current = next
 		next = set()
@@ -130,7 +137,7 @@ def findnext(node,statfield):
 
 #runs over evry . if there is more than 2 connected paths, its a node
 graph = {}	#the graph
-for node in Portal:
+for node in dirPortals:
 	graph[node] = findnext(node,field)
 
 
