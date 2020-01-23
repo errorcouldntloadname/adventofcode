@@ -81,12 +81,19 @@ for y in range(maxy):
 					field[(x,y)] = " "
 			else:
 				Portal.add(field[(x,y)])
-
-#key = node, values = (connectednode,length) (edges)
-
 #-------------------------------------------------
 #convert to graph
 #-------------------------------------------------
+#key = node, values = (connectednode,length) (edges)
+#returns the portal depending on wether its on the inner edge or outer
+def portalDirection(coor):
+	if (coor[0] == 1) or (coor[0] == maxx-2) or (coor[1] == 1) or (coor[1] == maxy - 2):
+		print("outer" , coor)
+	else:
+		print("inner" , coor)
+	return field[coor]
+
+
 def findnext(node,statfield):
 	current = set()		#current "."
 	next = set()		#next "." (adjecent "." to current and not yet traveld through)
@@ -110,7 +117,7 @@ def findnext(node,statfield):
 					next.add(j)				#path is now outer for the next step
 				else:				#adjecent is a portal
 					if not(field[j] in connected):
-						output.append((field[j],distance-1))
+						output.append((portalDirection(j),distance-1))
 						connected.add(field[j])
 		current = next
 		next = set()
@@ -126,7 +133,24 @@ graph = {}	#the graph
 for node in Portal:
 	graph[node] = findnext(node,field)
 
+
 print(graph)
+
+
+data = open("portal.graph","w")
+data.write(json.dumps(graph,ensure_ascii=False))
+
+
+##################################################################
+#-----------------------------------------------------------------
+#finished reading the .dat into .graph
+#-----------------------------------------------------------------
+##################################################################
+
+data = open("portal.graph","r")
+graph = json.loads(data.readline().rstrip())
+
+
 #Dijkstra
 #no idea how it works ;/ have to google
 finaleNodes = set()

@@ -1,3 +1,4 @@
+import time
 import copy
 #---------------------------------------------------------------------------------
 #read input data
@@ -46,7 +47,7 @@ for i in range(3):
 		if (Coordinate == startingCoor[i]) and (Velocity == startingVel[i]):
 			repeats[i] = steps
 			repeated = True	#stops this dimmension
-
+	print(Coordinate,Velocity)
 #----------------------------------------------------------------------------------
 #calculate first intersection of all 3 repeats
 #----------------------------------------------------------------------------------
