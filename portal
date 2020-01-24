@@ -58,7 +58,6 @@ if not(os.path.isfile("portal.graph")):
 
 	#reads data into array
 	field = {}
-	Portal = set()
 	data = open("portal.dat","r")
 	y = 0
 	for line in data:
@@ -81,8 +80,6 @@ if not(os.path.isfile("portal.graph")):
 				if (len(field[(x,y)]) == 1):
 					if (field[(x,y)] in ascii.ascii_uppercase):
 						field[(x,y)] = " "
-				else:
-					Portal.add(field[(x,y)])
 	#-------------------------------------------------
 	#convert to graph
 	#-------------------------------------------------
@@ -95,11 +92,11 @@ if not(os.path.isfile("portal.graph")):
 			return field[coor]+"I"
 
 	#runs throug the field adding directions to portals
-	dirPortals = set()
+	Portals = set()
 	for coor in field:
 		if len(field[coor]) == 2:
 			field[coor] = portalDirection(coor)
-			dirPortals.add(field[coor])
+			Portals.add(field[coor])
 
 
 	#finds all adjecent nodes for the graph
@@ -139,7 +136,7 @@ if not(os.path.isfile("portal.graph")):
 
 	#runs over evry . if there is more than 2 connected paths, its a node
 	basegraph = {}	#the graph
-	for node in dirPortals:
+	for node in Portals:
 		basegraph[node] = findnext(node,field)
 
 
@@ -156,6 +153,7 @@ if not(os.path.isfile("portal.graph")):
 #-----------------------------------------------------------------
 ##################################################################
 
+
 data = open("portal.graph","r")
 basegraph = json.loads(data.readline().rstrip())
 #iniialize lvl 0, remove AA and ZZ from basegraph (as tehy only appear on lvl 0)
@@ -163,6 +161,7 @@ basegraph = json.loads(data.readline().rstrip())
 maxrecursion = 0		#current highest recursion level
 graph = {}
 temp = copy.deepcopy(basegraph)
+Portals = set()
 for node in temp:
 	graph[node+"00"] = []
 	for link in temp[node]:
@@ -171,6 +170,27 @@ for node in temp:
 			basegraph[node].remove(link)
 	if (node == "AAO") or (node == "ZZO"):
 		del basegraph[node]
+	else:
+		Portals.add(node)
+#done initializing
+
+
+#adds next incursion level to graph
+def newRecursion(maxrecursion):
+	reclvl = str(maxrecursion + 1).zfill(2)		#adds leading 0 to make a 2char long string
+	for node in Portals:
+		#set distance of all new nodes to infinite
+		Distance[node+reclvl] = -1
+		#adds new nodes with links in their respective maze
+		graph[node+reclvl] = []
+		for link in basegraph[node]:
+			graph[node+reclvl].append((link[0]+reclvl,link[1]))
+		#link outer Portals to inner of prev. level
+		if node[2] == "O":
+			linked = node[:2] + "I" + str(maxrecursion).zfill(2)
+			graph[node+reclvl].append((linked,0))
+			graph[linked].append((node+reclvl,0))
+#end of newRecursion
 
 
 #Dijkstra
@@ -179,9 +199,12 @@ finaleNodes = set()
 Distance = {}
 currentnode = ""
 #initialize Distances
-for node in Portal:
+for node in Portals:
 	Distance[node] = -1
 Distance["AA"] = 0
+
+newRecursion(maxrecursion)
+print(graph)
 
 #-1 implements infinity
 def smaller(first,second):
