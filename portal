@@ -158,6 +158,19 @@ if not(os.path.isfile("portal.graph")):
 
 data = open("portal.graph","r")
 basegraph = json.loads(data.readline().rstrip())
+#iniialize lvl 0, remove AA and ZZ from basegraph (as tehy only appear on lvl 0)
+#add "00" to the end of evrything
+maxrecursion = 0		#current highest recursion level
+graph = {}
+temp = copy.deepcopy(basegraph)
+for node in temp:
+	graph[node+"00"] = []
+	for link in temp[node]:
+		graph[node+"00"].append((link[0]+"00",link[1]))
+		if link[0] == "AAO":
+			basegraph[node].remove(link)
+	if (node == "AAO") or (node == "ZZO"):
+		del basegraph[node]
 
 
 #Dijkstra
