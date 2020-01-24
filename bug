@@ -38,6 +38,8 @@ def adjecent(current):
 
 	#adjecent position for outer edges
 	def outer(current,edge):
+		if current[2] == recursion[0]:	#then its the outmost layer and no outer layer exists
+			return []
 		if edge == 0:	#up
 			return [(2,1,current[2]+1)]
 		if edge == 1:	#right
@@ -49,6 +51,8 @@ def adjecent(current):
 
 	#adjecent position for inner edges (results in 5 adjecents per edge)
 	def inner(current,edge):
+		if current[2] == recursion[1]:	#then its the innermost layer and no inner layer exists
+			return []
 		output = []
 		for i in range(5):		
 			if edge == 0:	#up
@@ -114,6 +118,13 @@ def life(current,new):
 
 #runs through entire field once
 def singlerun():
+	#check if the outer levels are empty
+	if BugperLevel(recursion[0]) != 0:
+		recursion[0] += 1
+		newRecursion(recursion[0])
+	if BugperLevel(recursion[1]) != 0:
+		recursion[1] += -1
+		newRecursion(recursion[1])
 	new = {}
 	for position in grid:
 		life(position,new)
@@ -135,7 +146,7 @@ def newRecursion(level):
 #initialize
 data = open("bug.dat","r")
 grid = {}
-recursion = [1,-1]		#contains highest and lowest recursion, they are empty, if first bug appears, add new level	
+recursion = [0,0]		#contains highest and lowest recursion, if first bug appears on there, add new level	
 y = 0
 for line in data:
 	x = 0
@@ -146,9 +157,14 @@ for line in data:
 	y += 1
 #end of initializing
 
-print(BugperLevel(0))
-
 passed = set()
-for step in range(1):
-	print(adjecent((3,2,0)))
-	#singlerun()
+for step in range(200):
+	singlerun()
+
+#read bug of all existing layers
+print(recursion)
+total = 0
+for i in range(recursion[0]-recursion[1]):
+	level = i + recursion[1]
+	total += BugperLevel(level)
+print(total)
