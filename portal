@@ -166,7 +166,7 @@ for node in temp:
 	graph[node+"00"] = []
 	for link in temp[node]:
 		graph[node+"00"].append((link[0]+"00",link[1]))
-		if link[0] == "AAO":
+		if link[0] in ["AAO","ZZO"]:
 			basegraph[node].remove(link)
 	if (node == "AAO") or (node == "ZZO"):
 		del basegraph[node]
@@ -193,18 +193,19 @@ def newRecursion(maxrecursion):
 #end of newRecursion
 
 
+#---------------------------------------------------------------------------------------
 #Dijkstra
-#no idea how it works ;/ have to google
+#when algorithm searches the inner circle of max. recursion lvl add a new lvl to graph
+#---------------------------------------------------------------------------------------
 finaleNodes = set()
 Distance = {}
 currentnode = ""
 #initialize Distances
 for node in Portals:
-	Distance[node] = -1
-Distance["AA"] = 0
+	Distance[node+"00"] = -1
+Distance["AAO00"] = 0
+Distance["ZZO00"] = -1
 
-newRecursion(maxrecursion)
-print(graph)
 
 #-1 implements infinity
 def smaller(first,second):
@@ -213,10 +214,13 @@ def smaller(first,second):
 	if second == -1:
 		return True
 	return (first < second)
+#end of smaller
 
+
+#returns the next node to analyze
 def nextnode():
 	lowDistance = -1
-	lowNode = "AA"
+	lowNode = None
 	for node in Distance:
 		if node in finaleNodes:
 			continue
@@ -225,12 +229,18 @@ def nextnode():
 			lowNode = node
 	return lowNode
 
-while currentnode != "ZZ":
+
+#dijstra continues until node ZZO00 is set 
+while currentnode != "ZZO00":
 	currentnode = nextnode()
+	#if the node is on inner circle of lowest recursion create a new level
+	if (currentnode[2] == "I") and (int(currentnode[3:]) == maxrecursion):
+		newRecursion(maxrecursion)
+		maxrecursion += 1
 	#for each connected node
 	for node in graph[currentnode]:
 		#if origin->currentnode + currentnode -> node < origin -> node
 		if smaller(Distance[currentnode]+node[1],Distance[node[0]]):
 			Distance[node[0]] = Distance[currentnode]+node[1]
 	finaleNodes.add(currentnode)
-print(Distance["ZZ"]-1)	#task starts 1 step next to AA
+print(Distance["ZZO00"]-1)	#task starts 1 step next to AA
