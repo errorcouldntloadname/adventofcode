@@ -84,6 +84,18 @@ def adjecentbugs(position):
 #end of adjecentbugs
 
 
+#counts the number of bugs of one recursion level
+def BugperLevel(level):
+	count = 0
+	for x in range(5):
+		for y in range(5):
+			if (x,y) != (2,2):
+				if grid[(x,y,level)] == "#":
+					count += 1
+	return count
+#end of BugperLevel
+
+
 #checks if bug dies
 def life(current,new):
 	bugs = adjecentbugs(current)
@@ -134,6 +146,7 @@ for line in data:
 	y += 1
 #end of initializing
 
+print(BugperLevel(0))
 
 passed = set()
 for step in range(1):
