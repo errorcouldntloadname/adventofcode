@@ -128,9 +128,6 @@ if not(os.path.isfile("portal.graph")):
 			current = next
 			next = set()
 			distance += 1
-			time.sleep(0.075)
-			os.system("clear")
-			printfield(field)
 		return output
 	#end of findnext
 
