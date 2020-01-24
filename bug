@@ -1,4 +1,6 @@
+#how dafu do you do recursion on this
 #returns set of adjecent coordinate tuples
+#TODO: add support for edge recursion and new coordinate formate
 def adjecent(current):
 	output = set()
 	temp = {}
@@ -27,15 +29,16 @@ def adjecentbugs(position):
 
 #checks if bug dies
 def life(current,new):
+	bugs = adjecentbugs(current)
 	#current tile is a bug
 	if grid[current] == "#":
 		#bug dies if exactly 1 bug adjecent
-		if adjecentbugs(current) != 1:
+		if bugs != 1:
 			new[current] = "."
 	#current tile is empty	
 	else:	
 		#new bug if 1 or 2 bugs close
-		if adjecentbugs(current) in [1,2]:
+		if bugs in [1,2]:
 			new[current] = "#"
 #end of life
 
@@ -50,28 +53,6 @@ def singlerun():
 		grid[position] = new[position]
 #end of singlerun
 
-
-#print the field
-def printgrid():
-	for y in range(5):
-		temp = ""
-		for x in range(5):
-			temp += grid[(x,y)]
-		print(temp)
-#end of printgrid
-
-
-#returns biodiversity value of the current grid
-def diversity():
-	multiplier = 1
-	biodiversity = 0
-	for y in range(5):
-		for x in range(5):
-			if grid[(x,y)] == "#":
-				biodiversity += multiplier
-			multiplier = multiplier * 2
-	return biodiversity
-#end of diversity
 
 data = open("bug.dat","r")
 grid = {}
