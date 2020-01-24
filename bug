@@ -56,22 +56,17 @@ def singlerun():
 
 data = open("bug.dat","r")
 grid = {}
-
+recursion = [1,-1]		#contains highest and lowest recursion, they are empty, if first bug appears, add new level	
 y = 0
 for line in data:
 	x = 0
 	for c in line.rstrip():
-		grid[(x,y)] = c
+		if (x,y) != (2,2):
+			grid[(x,y,0)] = c		#3rd coordinate is the recursion level
 		x += 1
 	y += 1
 
 passed = set()
-while True:
-	bio = diversity()
-	print(bio) 
-	if bio in passed:
-		break
-	else:
-		passed.add(bio)	
+for step in range(10):
 	singlerun()
-printgrid()
+print
