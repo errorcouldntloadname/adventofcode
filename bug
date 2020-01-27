@@ -1,9 +1,5 @@
 #how dafu do you do recursion on this
 #returns set of adjecent coordinate tuples
-#TODO: add support for edge recursion and new coordinate formate
-#idea: make dict wich coords have a inner ,outer or normal edge
-#inner and outer edges are only dependant on direction not coordinate
-#normal works just like b4
 def adjecent(current):
 	#edge starts at 0 for up, rotates clockwise, says wich edge is inner,outer or normal
 	edges = []
