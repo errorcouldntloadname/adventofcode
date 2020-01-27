@@ -1,4 +1,10 @@
-https://adventofcode.com/2019/
+https://adventofcode.com
 
 Alle scripte brauchen ein data file [name].dat
 mit einem copy-paste des advent of code puzzle input
+
+Programmiersprache:
+2019: Python 
+```diff
+! This was pretty weird
+```
