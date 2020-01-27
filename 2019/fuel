@@ -1,0 +1,105 @@
+import math
+print("")
+print("")
+print("")
+#----------------------------------------------------------------------------------------
+#reading input data
+#----------------------------------------------------------------------------------------
+#read data into dictionary Key = product name ,
+# value = (productcount ,((resourcename, resourcecount),(...)))
+data = open("fuel.dat","r")
+
+reaction = {}
+
+for line in data:
+	requirement, product = line.rstrip().split(" => ")
+	#resource requirements
+	templist = requirement.split(", ")		#contains resources as "count name"
+	templist2 = []
+	for resource in templist:
+		count, name = resource.split(" ")
+		templist2.append((int(count),name))
+	#product outcome
+	productcount, productname = product.split(" ")
+	#dictionary entry
+	reaction[productname] = (int(productcount),tuple(templist2))
+#----------------------------------------------------------------------------------------
+#end of reading
+#----------------------------------------------------------------------------------------
+
+#takes (count,name) produces count of resource name, (handles leftovers)
+def fetchLeftovers(count,name):
+	#check for leftover resource
+	if name in leftover:
+		if count >= leftover[name]:
+			newcount = count - leftover[name]
+			leftover.pop(name)
+		else:
+			newcount = 0
+			leftover[name] += 0 - count
+	else:
+		newcount = count
+	return newcount
+#end of fetchLeftovers
+
+
+def craftChemical(i):
+	#checmical is not ORE
+	#how often to run the reaction
+	reqcount = fetchLeftovers(required[i],i)	#reqcount how much is needed after leftover 
+	step = reaction[i][0]					#how much is produced per reaction
+	reactcount = math.ceil(reqcount/step)	#how often to run the reaction
+	unused = (reactcount * step) - reqcount	#unnused product
+	if i in leftover:
+		leftover[i] += unused
+	elif unused > 0:
+		leftover[i] = unused
+	
+	#skip if no reaction required
+	if reactcount == 0:
+		required.pop(i)
+		return
+	#run the reaction reactcount times
+	resources = reaction[i][1]
+	for resource in resources:
+		if resource[1] in required:
+			required[resource[1]] += resource[0] * reactcount
+		else:
+			required[resource[1]] = resource[0] * reactcount
+	#chemical processed
+	required.pop(i)
+#end of craftChemical
+
+
+minfuel = 0
+maxfuel = 10**12
+while minfuel != maxfuel:
+	required = {}
+	leftover = {}
+	currentfuel =  int(((minfuel + maxfuel)/2)+0.5)	#check if the middle works
+	required["FUEL"] = currentfuel
+	leftover["ORE"] = 10**12				#reset Ore to full
+	running = True
+	print(str(minfuel) + " <= " + str(currentfuel) + " <= " + str(maxfuel))
+	while (len(required) > 0) and (running):
+		key = []
+		for i in required:
+			key.append(i)
+		for i in key:
+			if i == "ORE":
+				if i in leftover:
+					if leftover[i] >= required[i]:
+						leftover[i] += -required[i]
+						required.pop(i)
+					else:
+						running = False
+						break
+				else:
+					running = False
+					break
+			else:
+				craftChemical(i)
+	if running:
+		minfuel = currentfuel
+	else:
+		maxfuel = currentfuel-1

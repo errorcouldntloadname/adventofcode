@@ -1,0 +1,247 @@
+class Intcode:
+	#__init__
+	def __init__(self, string):
+		self.initopcode()
+		self.x = 0				#current instruction
+		self.Memory = []			#Current memory State
+		self.offset = 0			#offset used for parametermode 2
+		temp = string.split(",")
+		for i in temp:
+			self.Memory.append(int(i))	#take initial state
+		for i in range(1000):
+			self.Memory.append(0)
+		#end of intcode
+		#start of paint robot
+		self.facing = 0		#0 = up, numbered clockwise
+		self.Paint = {}		#key = position, value = color (0 = black)
+		self.position = [0,0]		#starting position of the robot
+		self.painted = False		#output instruction has 2 diffrent modes
+		self.Paint[(0,0)] = 1		#robot needs to start on white
+	#end of __init__
+
+
+	#outputs adress of parameter value (accounts diffrent modes)
+	def parametermode(self, parametercount):
+		x = self.x	
+		if parametercount >= 1:
+			if int(self.Memory[x]/100)%10 == 0:
+				i1 = self.Memory[x+1]
+			elif int(self.Memory[x]/100)%10 == 1:
+				i1 = x+1
+			else:
+				i1 = self.Memory[x+1] + self.offset
+		if parametercount >= 2:
+			if int(self.Memory[x]/1000)%10 == 0:
+				i2 = self.Memory[x+2]
+			elif int(self.Memory[x]/1000)%10 == 1:
+				i2 = x+2
+			else: 
+				i2 = self.Memory[x+2] + self.offset
+		if parametercount >= 3:
+			if int(self.Memory[x]/10000)%10 == 0:
+				i3 = self.Memory[x+3]
+			elif int(self.Memory[x]/10000)%10 == 1:
+				i3 = x+3
+			else:
+				i3 = self.Memory[x+3] + self.offset
+
+		if parametercount == 3:
+			return i1,i2,i3
+		if parametercount == 2:
+			return i1,i2
+		if parametercount == 1:
+			return i1
+	#end of parametermode
+
+
+	#adds 
+	def add(self):
+		i1,i2,o = self.parametermode(3)
+		self.Memory[o] = self.Memory[i1] + self.Memory[i2]
+		self.x += 4
+	#end of add
+
+
+	#multiplies
+	def multiply(self):
+		i1,i2,o = self.parametermode(3)
+		self.Memory[o] = self.Memory[i1] * self.Memory[i2]
+		self.x += 4
+	#end of multiply
+
+	
+	#access robots camera (get color of current tile)
+	def userInput(self):
+		if (self.position[0],self.position[1]) in self.Paint:		
+			i1 = self.Paint[(self.position[0],self.position[1])]
+		else:
+			i1 = 0
+		o = self.parametermode(1)
+		self.Memory[o] = i1
+		self.x += 2
+	#end of userInput
+
+
+	#alternating: (paint tile) , (move robot)
+	def userOutput(self):
+		i = self.parametermode(1)
+		if self.painted:	#robot painted last action
+			self.turn(self.Memory[i])
+			self.move()
+			self.painted = False	#next action is painting
+		else: 			#robot moved last action
+			self.Paint[(self.position[0],self.position[1])] = self.Memory[i]
+			self.painted = True	#next action is moving
+		self.x += 2
+	#end of userOutput
+	
+	
+	def jumpiftrue(self):
+		i1,i2 = self.parametermode(2)
+		if self.Memory[i1] != 0:
+			self.x = self.Memory[i2]
+		else:
+			self.x += 3
+	#end of jump-if-true
+
+
+	def jumpiffalse(self):
+		i1,i2 = self.parametermode(2)
+		if self.Memory[i1] == 0:
+			self.x = self.Memory[i2]
+		else:
+			self.x += 3
+	#end of jump-if-false
+
+
+	def lessthan(self):
+		i1,i2,o = self.parametermode(3)
+		if self.Memory[i1] < self.Memory[i2]:
+			self.Memory[o] = 1
+		else:
+			self.Memory[o] = 0
+		self.x += 4
+	#end of lessthan
+
+
+	def equalto(self):
+		i1,i2,o = self.parametermode(3)
+		if (self.Memory[i1]) == (self.Memory[i2]):		
+			self.Memory[o] = 1
+		else:
+			self.Memory[o] = 0
+		self.x += 4
+	#end of equalto
+
+
+	#change offset for parametermode 2
+	def choffset(self):
+		i1 = self.parametermode(1)
+		self.offset += self.Memory[i1]
+		self.x += 2
+	#end of choffset
+
+
+	#runs until opcode 99 encountered
+	def run(self):
+		while True:
+			instruction = self.Memory[self.x]%100
+			if instruction == 99:
+				break
+			elif instruction in self.opcode:
+				self.opcode[instruction]()
+			else:
+				print("invalid!")
+				break
+	#end of run
+
+
+	#links the int opcode to the function
+	def initopcode(self):
+		self.opcode = {}			
+		self.opcode[1] = self.add
+		self.opcode[2] = self.multiply
+		self.opcode[3] = self.userInput
+		self.opcode[4] = self.userOutput
+		self.opcode[5] = self.jumpiftrue
+		self.opcode[6] = self.jumpiffalse
+		self.opcode[7] = self.lessthan
+		self.opcode[8] = self.equalto
+		self.opcode[9] = self.choffset
+	#end of initopcode
+
+	
+	#end of intcode computer
+	#start of robot specifics
+
+
+	#turns the robot (0 = counter-clockwise, 1 = clockwise)
+	def turn(self, direction):
+		if direction == 0:		#adjusts given 0 = counterclockwise to -1
+			direction = -1
+		self.facing = (self.facing + direction + 4) %4	#+4 to prevent negative at 0->3
+	#end of turn
+
+
+	#moves the robot 1 space forward
+	def move(self):
+		if self.facing == 0:	#up
+			self.position[1] += 1
+		elif self.facing == 1:	#right
+			self.position[0] += 1
+		elif self.facing == 2:	#down
+			self.position[1] += -1
+		elif self.facing == 3:	#left
+			self.position[0] += -1
+	#end of move
+
+
+#-------------------------------------------------------------------------------------------------
+#end of class intcode
+#-------------------------------------------------------------------------------------------------
+
+data = open("paint.dat","r")
+line = data.readline().rstrip()
+
+robot = Intcode(line)
+
+robot.run()	#paint
+
+#show painting
+minx = 0
+miny = 0
+maxx = 0
+maxy = 0
+
+for i in robot.Paint:
+	if i[0] < minx:
+		minx = i[0]
+
+	elif i[0] > maxx:
+		maxx = i[0]
+	elif i[1] < miny:
+		miny = i[1]
+	elif i[1] > maxy:
+		maxy = i[1]
+
+print(maxx)
+print(minx)
+print(maxy)
+print(miny)
+number = []
+for uy in range((maxy - miny)+1):
+	y = uy + miny
+	temp = ""
+	for ux in range((maxx - minx)+1):
+		x = ux + minx		
+		if (x,y) in robot.Paint:
+			if robot.Paint[(x,y)] == 0:
+				temp += " "
+			else:
+				temp += "#"
+		else:
+			temp += " "
+	number.append(temp)
+
+for line in reversed(number):
+	print(line)

@@ -1,0 +1,31 @@
+import numpy
+
+#reads signal as numpy.array
+def readsignal(line):
+	return numpy.array([int(d) for d in line])
+#end of readsignal
+
+
+#getoffset
+def getoffset(signal):
+	offset = ((10 ** numpy.arange(6,-1,-1)) * signal[:7]).sum()
+	return (numpy.tile(signal,10000))[offset:]
+
+
+
+#do the summing!
+def run(signal,repeat):
+	for step in range(repeat):
+		reverse = signal[::-1]
+		signal = (numpy.cumsum(signal[::-1])[::-1]) % 10
+	return signal
+#end of run
+
+
+#------------------------------------------------------------------------
+data = open("message.dat","r")
+signal = readsignal(data.readline().rstrip())
+signal = getoffset(signal)
+signal = run(signal,100)
+first8 = ((10 ** numpy.arange(7,-1,-1)) * signal[:8]).sum()
+print(first8)

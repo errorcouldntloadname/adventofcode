@@ -1,0 +1,89 @@
+from intcode import Intcode
+import time
+import os
+
+class Arcade(Intcode):
+	#inits arcade-specific variables
+	def __init__(self,string):
+		super().__init__(string)
+		self.currentTile = [0,0]	#tile [xpos,ypos]
+		self.outputnumber = 0		#rotates through diffrent output meanings
+		self.Tiles = {}		#dictionary of tiles key = (xpos,ypos) value=type
+		self.screen = [0,0]
+		self.Types = [" ","X","#","_","o"]	#links type values to the character for display
+		self.Memory[0] = 2					#play for free
+	#end of initarcade
+
+
+	#prints the current screen on the board
+	def updatescreen(self):
+		os.system("clear")
+		if (-1,0) in self.Tiles:
+			print(self.Tiles[(-1,0)])
+		for y in range(self.screen[1]+1):
+			temp = ""
+			for x in range(self.screen[0]+1):
+				if (x,y) in self.Tiles:
+					temp += self.Types[self.Tiles[(x,y)]]
+			print(temp)
+	#end of updatescreen
+				
+		
+	#output 0 and 1 update x and y coordinate, output 2 updates tile to new type
+	def handleOut(self,output):
+		if self.outputnumber < 2:
+			self.currentTile[self.outputnumber] = output
+			if self.screen[self.outputnumber] < output:
+				self.screen[self.outputnumber] = output
+		else:
+			temp = (self.currentTile[0],self.currentTile[1])
+			self.Tiles[temp] = output
+			if output == 4:
+				self.BallPos = temp
+			if output == 3:
+				self.PaddlePos = temp
+		self.outputnumber = (self.outputnumber + 1) % 3
+	#end of handleOut
+
+
+	def handleIn(self):
+		self.updatescreen()
+		print("")
+		time.sleep(0.01)
+		if self.PaddlePos[0] > self.BallPos[0]:
+			return -1
+		elif self.PaddlePos[0] < self.BallPos[0]:
+			return 1
+		else:
+			return 0
+		"""	
+		print("Input a for left, d for right, s for wait")
+		while True:
+			string = input()
+			if string == "s":
+				return 0
+			elif string == "a":
+				return -1
+			elif string == "d":
+				return 1
+		"""	
+	#end of handleIn
+
+
+	def quit(self):
+		blocks = 0
+		print(self.Tiles)
+		for a in self.Tiles.values():
+			if a == 2:
+				blocks += 1
+		print(blocks)
+		self.updatescreen()
+	#end of quit
+#end of arcade
+
+
+data = open("arcade.dat","r")
+
+arcade = Arcade(data.readline().rstrip())
+
+arcade.run()

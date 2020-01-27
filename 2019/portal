@@ -1,0 +1,243 @@
+import string as ascii
+import copy
+import time
+import os
+import json
+#day 20 
+
+#create graph with node for every dot
+#breadth first search for portals
+#djikstra shortest path 
+
+#------------------------------------------------
+#read input as dictionary
+#------------------------------------------------
+if not(os.path.isfile("portal.graph")):
+	#returns adjecent paths
+	def findadjecent(coordinate,field):
+		temp = [0,0,0,0]
+		output = []
+		temp[0] = (coordinate[0]+1,coordinate[1])
+		temp[1] = (coordinate[0]-1,coordinate[1])
+		temp[2] = (coordinate[0],coordinate[1]+1)
+		temp[3] = (coordinate[0],coordinate[1]-1)
+		for i in temp:
+			if i in field:
+				if not(field[i] in [" ","#"]) and not(field[i] in "0123456789"):
+					output.append(i)
+		return output
+
+	#portals are written as 2 characters, identifies if this position is hte portal, if it is output portal
+	def readportal(coordinate,field):
+		adjecent = findadjecent(coordinate,field)
+		adjchar = []
+		for i in adjecent:
+			adjchar.append(field[i])
+		if "." in adjchar:
+			#check if letter is right/down
+			if field[adjecent[0]] != ".":
+				return field[coordinate] + field[adjecent[0]]
+			else:
+				return field[adjecent[1]] + field[coordinate]
+		else:
+			return field[coordinate]
+
+
+	#prints the current field (replaces portals with star
+	def printfield(field):
+		for y in range(maxy):
+			temp = ""
+			for x in range(maxx):
+				if len(field[(x,y)]) > 2:
+					temp += "✺"
+				else:
+					temp += field[(x,y)]
+			print(temp)
+	#end of printfield
+
+
+	#reads data into array
+	field = {}
+	data = open("portal.dat","r")
+	y = 0
+	for line in data:
+		x = 0
+		string = line[:-1]
+		for i in string:
+			field[(x,y)] = i
+			x += 1
+		y += 1
+	maxx = x
+	maxy = y
+	for y in range(maxy):
+		for x in range(maxx):
+			if not(field[(x,y)] in [".","#"," "]):
+				field[(x,y)] = readportal((x,y),field)
+
+
+	for y in range(maxy):
+		for x in range(maxx):
+				if (len(field[(x,y)]) == 1):
+					if (field[(x,y)] in ascii.ascii_uppercase):
+						field[(x,y)] = " "
+	#-------------------------------------------------
+	#convert to graph
+	#-------------------------------------------------
+	#key = node, values = (connectednode,length) (edges)
+	#returns the portal depending on wether its on the inner edge or outer
+	def portalDirection(coor):
+		if (coor[0] == 1) or (coor[0] == maxx-2) or (coor[1] == 1) or (coor[1] == maxy - 2):
+			return field[coor]+"O"
+		else:
+			return field[coor]+"I"
+
+	#runs throug the field adding directions to portals
+	Portals = set()
+	for coor in field:
+		if len(field[coor]) == 2:
+			field[coor] = portalDirection(coor)
+			Portals.add(field[coor])
+
+
+	#finds all adjecent nodes for the graph
+	def findnext(node,statfield):
+		current = set()		#current "."
+		next = set()		#next "." (adjecent "." to current and not yet traveld through)
+		output = []
+		distance = 1
+		connected = set()	#fills with all connected nodes so no doubles exist
+		field = copy.deepcopy(statfield)	#messing up the field in the function, so deepcopy it
+		#portals of current node are starting point
+		for i in field:
+			if field[i] == node:
+				current.add(i)
+				field[i] = "0"
+
+		while len(current) > 0:
+			#check fields next to current
+			for i in current:
+				adjecent = findadjecent(i,field)	#returns list of adjecent portals and paths
+				for j in adjecent:
+					if field[j] == ".":
+						field[j] = str(distance)[-1:]	#fills paths with the distance from node (last digit)
+						next.add(j)				#path is now outer for the next step
+					else:				#adjecent is a portal
+						if not(field[j] in connected):
+							output.append((field[j],distance-1))
+							connected.add(field[j])
+			current = next
+			next = set()
+			distance += 1
+		return output
+	#end of findnext
+
+	#runs over evry . if there is more than 2 connected paths, its a node
+	basegraph = {}	#the graph
+	for node in Portals:
+		basegraph[node] = findnext(node,field)
+
+
+	print(basegraph)
+
+
+	data = open("portal.graph","w")
+	data.write(json.dumps(basegraph,ensure_ascii=False))
+
+
+##################################################################
+#-----------------------------------------------------------------
+#finished reading the .dat into .graph
+#-----------------------------------------------------------------
+##################################################################
+
+
+data = open("portal.graph","r")
+basegraph = json.loads(data.readline().rstrip())
+#iniialize lvl 0, remove AA and ZZ from basegraph (as tehy only appear on lvl 0)
+#add "00" to the end of evrything
+maxrecursion = 0		#current highest recursion level
+graph = {}
+temp = copy.deepcopy(basegraph)
+Portals = set()
+for node in temp:
+	graph[node+"00"] = []
+	for link in temp[node]:
+		graph[node+"00"].append((link[0]+"00",link[1]))
+		if link[0] in ["AAO","ZZO"]:
+			basegraph[node].remove(link)
+	if (node == "AAO") or (node == "ZZO"):
+		del basegraph[node]
+	else:
+		Portals.add(node)
+#done initializing
+
+
+#adds next incursion level to graph
+def newRecursion(maxrecursion):
+	reclvl = str(maxrecursion + 1).zfill(2)		#adds leading 0 to make a 2char long string
+	for node in Portals:
+		#set distance of all new nodes to infinite
+		Distance[node+reclvl] = -1
+		#adds new nodes with links in their respective maze
+		graph[node+reclvl] = []
+		for link in basegraph[node]:
+			graph[node+reclvl].append((link[0]+reclvl,link[1]))
+		#link outer Portals to inner of prev. level
+		if node[2] == "O":
+			linked = node[:2] + "I" + str(maxrecursion).zfill(2)
+			graph[node+reclvl].append((linked,0))
+			graph[linked].append((node+reclvl,0))
+#end of newRecursion
+
+
+#---------------------------------------------------------------------------------------
+#Dijkstra
+#when algorithm searches the inner circle of max. recursion lvl add a new lvl to graph
+#---------------------------------------------------------------------------------------
+finaleNodes = set()
+Distance = {}
+currentnode = ""
+#initialize Distances
+for node in Portals:
+	Distance[node+"00"] = -1
+Distance["AAO00"] = 0
+Distance["ZZO00"] = -1
+
+
+#-1 implements infinity
+def smaller(first,second):
+	if first == -1:
+		return False
+	if second == -1:
+		return True
+	return (first < second)
+#end of smaller
+
+
+#returns the next node to analyze
+def nextnode():
+	lowDistance = -1
+	lowNode = None
+	for node in Distance:
+		if node in finaleNodes:
+			continue
+		if smaller(Distance[node],lowDistance):
+			lowDistance = Distance[node]
+			lowNode = node
+	return lowNode
+
+
+#dijstra continues until node ZZO00 is set 
+while currentnode != "ZZO00":
+	currentnode = nextnode()
+	#if the node is on inner circle of lowest recursion create a new level
+	if (currentnode[2] == "I") and (int(currentnode[3:]) == maxrecursion):
+		newRecursion(maxrecursion)
+		maxrecursion += 1
+	#for each connected node
+	for node in graph[currentnode]:
+		#if origin->currentnode + currentnode -> node < origin -> node
+		if smaller(Distance[currentnode]+node[1],Distance[node[0]]):
+			Distance[node[0]] = Distance[currentnode]+node[1]
+	finaleNodes.add(currentnode)
+print(Distance["ZZO00"]-1)	#task starts 1 step next to AA

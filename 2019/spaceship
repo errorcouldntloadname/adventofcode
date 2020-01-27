@@ -1,0 +1,39 @@
+from intcode import Intcode
+import time
+import os
+
+class Drone(Intcode):
+	def __init__(self,string):
+		super().__init__(string)
+		self.currentCommand = ""
+		self.currentLine = ""	
+	#end of init
+
+
+	#inputs string char by char, asks for new string if no command in storage
+	def handleIn(self):
+		#print(self.currentCommand)
+		if self.currentCommand == "":
+			print("north/south/west/east , take <item> , drop <item> , inv")
+			print("O.O")
+			self.currentCommand = input() + chr(10)
+
+		#provide first letter of current command
+		temp = ord(self.currentCommand[:1])
+		self.currentCommand = self.currentCommand[1:]
+		return temp
+	#handleIn
+
+
+	#stores chars until newline
+	def handleOut(self,output):
+		if output == 10:
+			print(self.currentLine)
+			self.currentLine = ""
+		else:
+			self.currentLine += chr(output)
+		
+
+data = open("spaceship.dat","r")
+drone = Drone(data.readline().rstrip())
+drone.run()

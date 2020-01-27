@@ -1,0 +1,240 @@
+import string
+import copy
+import json
+import os
+
+if not(os.path.isfile("labyrinth.graph")):
+	#top left starting point is 1 then clockwise (replace the 4 diffrent @)
+	#graph exported to labgraph.dat json 
+	#########################################################
+	#--------------------------------------------------------
+	#read maze as a graph
+	#--------------------------------------------------------
+	#########################################################
+
+	#Read maze as dictionary
+	data = open("labyrinth.dat","r")
+	field =  {}
+	entrancecount = 1		#replaces @ with number (needed for part2)
+	y = 0
+	for line in data:
+		x = 0
+		y += 1
+		for i in line.rstrip():
+			field[(x,y)] = i	
+			if i == "@":
+				field[(x,y)] = str(entrancecount)
+				entrancecount += 1	
+			x += 1
+
+
+	#------------------------------------
+	#Turn into graph
+	#------------------------------------
+	#returns all adjecent paths/keys/doors (evrything but walls essentially)
+	def findadjecent(coordinate,field):
+		temp = [0,0,0,0]
+		output = []
+		temp[0] = (coordinate[0]+1,coordinate[1])
+		temp[1] = (coordinate[0]-1,coordinate[1])
+		temp[2] = (coordinate[0],coordinate[1]+1)
+		temp[3] = (coordinate[0],coordinate[1]-1)
+		for i in temp:
+			if i in field:
+				if field[i] != "#":
+					output.append(i)
+		return output
+	#end of findadjecent
+
+		
+	#finds all connected nodes for any given node in the given field
+	def findnext(node,statfield):
+		current = set()		#current outer edges
+		next = set()		#outer edges of next step
+		field = copy.deepcopy(statfield)
+		field[node] = "#"
+		distance = 0
+		output = []
+
+		#find the coordinates of the node in question
+		for i in field:
+			if field[i] == node:
+				current.add(i)
+				field[i] = "#"
+				break
+
+		#check evry tile next to the current outer edge
+		while len(current)>0:
+			distance += 1
+			for i in current:
+				adjecent = findadjecent(i,field)
+				for j in adjecent:
+					if field[j] == ".":
+						next.add(j)
+					else:
+						output.append((field[j],distance))
+					field[j] = "#"	#blocks this tile so the same tile is only found once
+			#set current for the next step
+			current = next
+			next = set()
+		return output
+	#end of findnext
+
+
+	#find evry node in the field
+	Nodes = set()
+	for i in field:
+		if not(field[i] in [".","#"]):
+			Nodes.add(field[i])
+
+
+	#for evry node get its connected nodes
+	graph = {}		#key = node, value = set of connected nodes as (node,distance)
+	for node in Nodes:	
+		graph[node] = findnext(node,field)
+
+	data = open("labyrinth.graph","w")
+	data.write(json.dumps(graph,ensure_ascii=False))
+#end of reading maze as graph
+
+#---------------------------------------------------------
+#reads graph from json
+#----------------------------------------------------------
+
+data = open("labyrinth.graph","r")
+graph = json.loads(data.readline().rstrip())
+
+#check if its part 1 or 2 (only part 2 has "2" in the graph)
+#entrancecount is used so that reachable doesnt break on part 1
+if "2" in graph.keys():
+	entrancecount = 4
+else:
+	entrancecount = 1
+#########################################################
+#--------------------------------------------------------
+#End of reading input
+#--------------------------------------------------------
+#reachable and dijsktra for the graph
+#--------------------------------------------------------
+#########################################################
+
+
+#outputs the list of keys that dont require travel through either locked door or uncollected key
+def reachable(state):
+	allowed = "1234" + bittostring(state[1]) + bittostring(state[1]).upper()
+	output = set()
+	for i in range(entrancecount):		#parts 2 : range(4) , part1 : range(1)		
+		explored = set()
+		current = set(state[0][i])
+		found = set()
+		while len(current) > 0:
+			for node in current:
+				for connected in graph[node]:
+					if (connected[0] in allowed):
+						if not(connected[0] in explored) and not(connected[0] in current):
+							found.add(connected[0])
+					else:
+						if connected[0] in string.ascii_lowercase:
+							newpos = state[0][:i] + connected[0] + state[0][i+1:]
+							output.add((newpos,i))
+				explored.add(node)
+			current = found
+			found = set()
+	return output
+#end of reachable
+
+
+#returns string for key bitmap
+def bittostring(bitmap):
+	output = ""
+	for i in range(26):
+		if bitmap == 0:
+			break
+		elif bitmap % 2 == 1:
+			output += string.ascii_lowercase[i:i+1]
+			bitmap += -1
+		bitmap = bitmap / 2
+	return output
+#end of bittostring
+
+			
+#dijsktra
+def path(start,end,keys):
+	finaleNodes = set()
+	keystring = bittostring(keys)
+	Distance = {}
+	currentnode = ""
+	#initialize Distances
+	for node in ("1234" + keystring + keystring.upper() + end):
+		Distance[node] = -1
+	Distance[start] = 0
+
+	#-1 implements infinity
+	def smaller(first,second):
+		if first == -1:
+			return False
+		if second == -1:
+			return True
+		return (first < second)
+
+	def nextnode():
+		lowDistance = -1
+		lowNode = ""
+		for node in Distance:
+			if node in finaleNodes:
+				continue
+			if smaller(Distance[node],lowDistance):
+				lowDistance = Distance[node]
+				lowNode = node
+		return lowNode
+
+	while currentnode != end:
+		currentnode = nextnode()
+		#for each connected node
+		for node in graph[currentnode]:
+			if node[0] in Distance:
+				#if origin->currentnode + currentnode -> node < origin -> node
+				if smaller(Distance[currentnode]+node[1],Distance[node[0]]):
+					Distance[node[0]] = Distance[currentnode]+node[1]
+		finaleNodes.add(currentnode)
+	return Distance[end]
+#end of path
+#---------------------------------------------------------------------------
+#calculate steps to having max. all the keys from any given state
+#state = (position,keys)    , states repeat alot, but never result in diffrent score thus score can be saved
+#position = 4long string containing the bot positions ( "1234" = all bots at entrances)
+#keys = bitmap of keys collected with LSB beeing key a
+#---------------------------------------------------------------------------
+#calculate score recursivly, take the min of every
+states = {}			#contains states and the pathlength	
+totalkeys = 0		#path ends when len(collected) = totalkeys
+call = set()
+for i in graph:
+	if i in string.ascii_lowercase:
+		totalkeys += 1
+
+ 
+def score(position,keys):
+	#check if this score was calulated before
+	if (position,keys) in states:
+		return states[(position,keys)]
+	else:
+		#calculate the current score
+		temp = []
+		for next in reachable((position,keys)):	#next[0] is the position, next[1] is wich position changed
+			newpos = next[0]
+			new = next[1]
+			temp.append(score(newpos,keys | 1<<(ord(newpos[new])-97)) + path(position[new],newpos[new],keys))
+		if len(temp) == 0:
+			#either dead end (ignore this path) or all keys found(start resolving recursive)
+			if len(bittostring(keys)) == totalkeys:
+				value = 0
+			else:
+				value = 10**10
+		else:
+			value = min(temp)
+		states[(position,keys)] = value
+		return value
+
+#calculate the score for the starting state of the robots
+print(score("1234",0))
