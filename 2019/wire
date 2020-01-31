@@ -26,4 +26,29 @@ def walkPath(position,path):
 #end of walkPath
 
 
-print(walkPath((0,0),"R5"))
+#dict containing coordinates and wich wire passed
+field = {}
+for wire in range(2):
+	position = (0,0)
+	for instruction in wires[wire]:
+		temp = walkPath(position,instruction)
+		for i in temp:
+			#add wire to field if its not already in (by crossing itself)			
+			if i in field:
+				if not(wire in field[i]):
+					field[i].append(wire)
+			else:
+				field[i] = [wire]
+		#update current pos
+		position = temp[-1]
+
+print(field)
+
+
+crossing = []
+for i in field:
+	if len(field[i]) == 2:
+		#manhattan distance
+		crossing.append(i[0] + i[1])
+
+print(crossing)
