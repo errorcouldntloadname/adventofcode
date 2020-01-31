@@ -24,4 +24,9 @@ for layer in Layers:
 	for i in layer:
 		if picture[i] == "2":
 			picture[i] = layer[i]
-print(picture)
+
+for y in range(height):
+	output = ""
+	for x in range(width):
+		output += picture[(x,y)]
+	print(output)
