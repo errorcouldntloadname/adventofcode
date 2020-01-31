@@ -28,5 +28,9 @@ for layer in Layers:
 for y in range(height):
 	output = ""
 	for x in range(width):
-		output += picture[(x,y)]
+		#0 is black (#) 1 is white ( )
+		if picture[(x,y)] == "0":
+			output += "#"
+		else:
+			output += " "
 	print(output)
