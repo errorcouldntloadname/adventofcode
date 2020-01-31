@@ -44,7 +44,7 @@ for wire in range(2):
 				field[pos] = [value]
 		#update current pos
 		position = (temp[-1][0],temp[-1][1])
-		distance += temp[-1][2]
+		distance = temp[-1][2]
 
 
 crossing = []
