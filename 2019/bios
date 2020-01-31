@@ -1,0 +1,37 @@
+data = open("bios.dat","r")
+height = 6
+width = 25
+Layers = [{}]
+layer = 0
+x = 0
+y = 0
+for i in data.readline().rstrip():
+	if x == width:
+		y += 1
+		x = 0
+		if y == height:
+			y = 0
+			layer += 1
+			Layers.append({})	
+	Layers[layer][(x,y)] = i
+	#get to next pixel ,might wrap into new line / layer
+	x += 1	
+
+#check for corrupted
+corrupt = []
+for layer in Layers:
+	count2 = 0
+	count1 = 0
+	count0 = 0
+	for i in layer:
+		if layer[i] == "2":
+			count2 += 1
+		elif layer[i] == "1":
+			count1 += 1
+		elif layer[i] == "0":
+			count0 += 1
+	corrupt.append((count0,count1 * count2))
+def returnfirst(thingy):
+	return thingy[0]
+corrupt.sort(key=returnfirst)
+print(corrupt[0])
