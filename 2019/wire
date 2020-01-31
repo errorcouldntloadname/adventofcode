@@ -42,13 +42,12 @@ for wire in range(2):
 		#update current pos
 		position = temp[-1]
 
-print(field)
-
 
 crossing = []
 for i in field:
 	if len(field[i]) == 2:
 		#manhattan distance
-		crossing.append(i[0] + i[1])
+		crossing.append(abs(i[0]) + abs(i[1]))
 
-print(crossing)
+crossing.sort()
+print(crossing[0])
