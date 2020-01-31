@@ -1,0 +1,8 @@
+data = open("wire.dat","r")
+
+wires = [[],[]]
+wires[0] = data.readline().rstrip().split(",")
+wires[1] = data.readline().rstrip().split(",")
+
+
+print(wires)
