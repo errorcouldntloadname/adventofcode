@@ -6,7 +6,7 @@ wires[1] = data.readline().rstrip().split(",")
 
 
 #returns set of all passed nodes
-def walkPath(position,path):
+def walkPath(position,path,distance):
 	dx,dy = 0,0
 	if path[0] == "U":
 		dy = 1
@@ -21,7 +21,7 @@ def walkPath(position,path):
 	for steps in range(int(path[1:])):
 		x = position[0] + (steps + 1) * dx
 		y = position[1] + (steps + 1) * dy
-		output.append((x,y))
+		output.append((x,y,distance+steps+1))
 	return output
 #end of walkPath
 
@@ -30,24 +30,30 @@ def walkPath(position,path):
 field = {}
 for wire in range(2):
 	position = (0,0)
+	distance = 0
 	for instruction in wires[wire]:
-		temp = walkPath(position,instruction)
+		temp = walkPath(position,instruction,distance)
 		for i in temp:
-			#add wire to field if its not already in (by crossing itself)			
-			if i in field:
-				if not(wire in field[i]):
-					field[i].append(wire)
+			pos = (i[0],i[1])
+			#add wire to field if its not already in (by crossing itself)
+			value = (wire,i[2])			
+			if pos in field:
+				if field[pos][-1][0] != wire:
+					field[pos].append(value)
 			else:
-				field[i] = [wire]
+				field[pos] = [value]
 		#update current pos
-		position = temp[-1]
+		position = (temp[-1][0],temp[-1][1])
+		distance += temp[-1][2]
 
 
 crossing = []
 for i in field:
 	if len(field[i]) == 2:
-		#manhattan distance
-		crossing.append(abs(i[0]) + abs(i[1]))
-
+		temp = field[i]
+		#manhattan distance (part1)
+		#crossing.append(abs(i[0]) + abs(i[1]))
+		#wire distance (part2)
+		crossing.append(temp[0][1] + temp[1][1])
 crossing.sort()
 print(crossing[0])
