@@ -5,4 +5,25 @@ wires[0] = data.readline().rstrip().split(",")
 wires[1] = data.readline().rstrip().split(",")
 
 
-print(wires)
+#returns set of all passed nodes
+def walkPath(position,path):
+	dx,dy = 0,0
+	if path[0] == "U":
+		dy = 1
+	elif path[0] == "D":
+		dy = -1
+	elif path[0] == "L":
+		dx = -1
+	elif path[0] == "R":
+		dx = 1
+
+	output = set()
+	for steps in range(int(path[1:])):
+		x = position[0] + (steps + 1) * dx
+		y = position[1] + (steps + 1) * dy
+		output.add((x,y))
+	return output
+#end of walkPath
+
+
+print(walkPath((0,0),"R5"))
