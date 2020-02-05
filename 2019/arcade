@@ -87,3 +87,4 @@ data = open("arcade.dat","r")
 arcade = Arcade(data.readline().rstrip())
 
 arcade.run()
+#its done! ;D
