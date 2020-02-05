@@ -72,7 +72,7 @@ void differbyone(string ID1, string ID2)
 	string sameChars = "";
 	
 	for(int i = 0; i < ID1.size();i++)	{
-		if(ID1[i] != ID2[i])		sameChars += ID1[i];
+		if(ID1[i] == ID2[i])	sameChars += ID1[i];
 	}
 	if(sameChars.size() == ID1.size() -1)	cout<<sameChars<<endl;
 }
