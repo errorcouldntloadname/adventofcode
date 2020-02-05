@@ -5,6 +5,7 @@
 
 using namespace std;
 
+void differbyone(string ID1, string ID2);
 bool containsMultiple(string ID,int multiple);	//returns true if any character is exactly "multiple" times 
 int checksum(list<string> datalist);
 
@@ -16,13 +17,22 @@ int main()
 	ifstream data("warehouse.dat");		//input data object
 	list<string> datalist;
 	string current;
+	list<string>::iterator it;
+	list<string>::iterator it2;
+
 	
 	//read input into single list	
 	for(int i = 0; i < 250; i++) {
 		data>>current;
 		datalist.push_back(current);
 	}
-	cout<<checksum(datalist)<<endl;
+
+	for(it = datalist.begin(); it != datalist.end(); it++)	{
+		for(it2 = it; it2 != datalist.end(); it2++){
+			differbyone(*it,*it2)	
+		}
+	}
+	//cout<<checksum(datalist)<<endl;
 	return 0;
 }
 //------------------- End of main ------------------------
@@ -54,3 +64,15 @@ int checksum(list<string> datalist)
 	return count2*count3;
 }	//end of checksum
 
+
+
+//checks if the 2 IDs differ by exactly one letter
+void differbyone(string ID1, string ID2)
+{
+	string sameChars = "";
+	
+	for(int i = 0; i < ID1.size();i++)	{
+		if(ID1[i] != ID2[i])		sameChars += ID[i];
+	}
+	if(sameChras.size() == ID1.size() -1)	cout<<sameChars<<endl;
+}
