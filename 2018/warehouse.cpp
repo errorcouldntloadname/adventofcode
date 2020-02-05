@@ -29,7 +29,7 @@ int main()
 
 	for(it = datalist.begin(); it != datalist.end(); it++)	{
 		for(it2 = it; it2 != datalist.end(); it2++){
-			differbyone(*it,*it2)	
+			differbyone(*it,*it2);	
 		}
 	}
 	//cout<<checksum(datalist)<<endl;
@@ -72,7 +72,7 @@ void differbyone(string ID1, string ID2)
 	string sameChars = "";
 	
 	for(int i = 0; i < ID1.size();i++)	{
-		if(ID1[i] != ID2[i])		sameChars += ID[i];
+		if(ID1[i] != ID2[i])		sameChars += ID1[i];
 	}
-	if(sameChras.size() == ID1.size() -1)	cout<<sameChars<<endl;
+	if(sameChars.size() == ID1.size() -1)	cout<<sameChars<<endl;
 }
